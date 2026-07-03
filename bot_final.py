@@ -103,7 +103,7 @@ async def send_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, user_n
 def main() -> None:
     application = Application.builder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("трекер", treker))  # ← НОВАЯ КОМАНДА
+    application.add_handler(CommandHandler("tracker", treker))  # ← НОВАЯ КОМАНДА
     
     print("✅ Бот запущен!")
     application.run_polling()
