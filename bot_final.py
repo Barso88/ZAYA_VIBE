@@ -11,33 +11,33 @@ logger = logging.getLogger(__name__)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     user_name = update.effective_user.first_name
-    
+
     try:
         member = await context.bot.get_chat_member(CHANNEL_ID, user_id)
-        
+
         if member.status in ["creator", "administrator", "member"]:
             await send_prompt(update, context, user_name)
         else:
             await ask_to_subscribe(update)
-            
+
     except Exception as e:
         logger.error(f"Ошибка: {e}")
         await ask_to_subscribe(update)
 
-async def treker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Команда /трекер - отправляет гайд по трекеру воды"""
+async def tracker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Команда /tracker - отправляет гайд по трекеру воды"""
     user_id = update.effective_user.id
     user_name = update.effective_user.first_name
-    
+
     try:
         member = await context.bot.get_chat_member(CHANNEL_ID, user_id)
-        
+
         if member.status in ["creator", "administrator", "member"]:
             await update.message.reply_text(
                 f"Привет, {user_name}! 💜\n\n"
                 "Вот гайд по созданию трекера воды 👇"
             )
-            
+
             try:
                 with open('vibecoding_water_tracker_guide.pdf', 'rb') as pdf_file:
                     await context.bot.send_document(
@@ -45,16 +45,53 @@ async def treker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                         document=pdf_file,
                         caption="Вайбкодинг: трекер воды 🌸\nПолный гайд для создания на телефоне"
                     )
-                
-                await update.message.reply_text("Создавай и делись результатом! 💪")
-                
+
+                await update.message.reply_text(
+                    "Нет доступа к AI или не получилось? Напиши /mycode — дам готовый код 💜"
+                )
+
             except FileNotFoundError:
                 await update.message.reply_text(
                     "Ошибка: файл гайда не найден."
                 )
         else:
             await ask_to_subscribe(update)
-            
+
+    except Exception as e:
+        logger.error(f"Ошибка: {e}")
+        await ask_to_subscribe(update)
+
+async def mycode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Команда /mycode - отправляет готовый код трекера воды"""
+    user_id = update.effective_user.id
+    user_name = update.effective_user.first_name
+
+    try:
+        member = await context.bot.get_chat_member(CHANNEL_ID, user_id)
+
+        if member.status in ["creator", "administrator", "member"]:
+            await update.message.reply_text(
+                f"Держи, {user_name}! 💜\n\n"
+                "Готовый код трекера воды — просто загрузи на netlify.com/drop 👇"
+            )
+
+            try:
+                with open('water-flower.html', 'rb') as code_file:
+                    await context.bot.send_document(
+                        chat_id=update.effective_chat.id,
+                        document=code_file,
+                        caption="Трекер воды — готовый код 🌸"
+                    )
+
+                await update.message.reply_text("Создавай и делись результатом! 💪")
+
+            except FileNotFoundError:
+                await update.message.reply_text(
+                    "Ошибка: файл кода не найден."
+                )
+        else:
+            await ask_to_subscribe(update)
+
     except Exception as e:
         logger.error(f"Ошибка: {e}")
         await ask_to_subscribe(update)
@@ -64,7 +101,7 @@ async def ask_to_subscribe(update: Update) -> None:
         [InlineKeyboardButton("✅ Подписаться на канал", url="https://t.me/zaya_vaibkodim")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
+
     await update.message.reply_text(
         "Привет, зая! 💜\n\n"
         "Чтобы получить контент вайбкодинга, подпишись на канал 👇\n\n"
@@ -77,7 +114,7 @@ async def send_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, user_n
         f"Спасибо что подписалась, {user_name}! 💜\n\n"
         "Вот твой волшебный промпт для вайбкодинга 👇"
     )
-    
+
     try:
         with open('vibecoding_prompt.pdf', 'rb') as pdf_file:
             await context.bot.send_document(
@@ -85,13 +122,14 @@ async def send_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, user_n
                 document=pdf_file,
                 caption="Вайбкодинг промпт - сохрани себе 📄"
             )
-        
+
         await update.message.reply_text(
             "Попробуй эти команды:\n"
-            "/трекер - гайд по трекеру воды 🌸\n\n"
+            "/tracker - гайд по трекеру воды 🌸\n"
+            "/mycode - готовый код, если нет доступа к AI\n\n"
             "Не поняла что-то? Пиши в комментах! 💪"
         )
-        
+
     except FileNotFoundError:
         await update.message.reply_text(
             "Ошибка: файл промпта не найден в папке."
@@ -103,8 +141,9 @@ async def send_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, user_n
 def main() -> None:
     application = Application.builder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("tracker", treker))  # ← НОВАЯ КОМАНДА
-    
+    application.add_handler(CommandHandler("tracker", tracker))
+    application.add_handler(CommandHandler("mycode", mycode))
+
     print("✅ Бот запущен!")
     application.run_polling()
 
