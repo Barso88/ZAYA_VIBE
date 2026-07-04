@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Цветок воды</title>
+<style>
+  :root{
+    --pink:#f7c6d9;
+    --lavender:#d9c7f0;
+    --mint:#c3e9d9;
+    --peach:#fbe0c9;
+    --bg1:#fdf3f6;
+    --bg2:#f3ecfb;
+    --ink:#5b4b63;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:-apple-system, "SF Pro Rounded", "Segoe UI", sans-serif;
+    background: radial-gradient(circle at 50% 20%, var(--bg2), var(--bg1) 70%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; padding:24px; color:var(--ink); overflow:hidden;
+    touch-action: manipulation;
+  }
+  .wrap{ width:100%; max-width:380px; text-align:center; }
+
+  .eyebrow{
+    font-size:13px; letter-spacing:.14em; text-transform:uppercase;
+    opacity:.55; margin-bottom:6px; font-weight:600;
+  }
+  .status{
+    font-size:20px; font-weight:700; margin-bottom:2px;
+  }
+  .status small{ display:block; font-size:13px; font-weight:500; opacity:.6; margin-top:2px; }
+
+  .stage{
+    position:relative; width:280px; height:280px; margin:22px auto 14px;
+  }
+
+  .center{
+    position:absolute; left:50%; top:50%; width:54px; height:54px;
+    transform:translate(-50%,-50%);
+    background: radial-gradient(circle at 35% 30%, #fff6ea, var(--peach) 75%);
+    border-radius:50%; z-index:5;
+    box-shadow: 0 0 0 6px rgba(255,255,255,.5), 0 6px 18px rgba(180,140,120,.25);
+  }
+
+  .petal{
+    position:absolute; left:50%; top:50%; width:56px; height:96px;
+    transform-origin:50% 100%;
+    margin-left:-28px; margin-top:-96px;
+    opacity:0; transform: rotate(var(--rot)) scale(.15);
+    transition: transform .7s cubic-bezier(.34,1.56,.64,1), opacity .6s ease;
+    border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+  }
+  .petal::after{
+    content:""; position:absolute; inset:0; border-radius:inherit;
+    background: inherit; filter: brightness(1);
+  }
+  .petal.p0{--rot:0deg; background:linear-gradient(180deg,var(--pink),#f9d7e5);}
+  .petal.p1{--rot:45deg; background:linear-gradient(180deg,var(--lavender),#e6d9f7);}
+  .petal.p2{--rot:90deg; background:linear-gradient(180deg,var(--mint),#d7f0e3);}
+  .petal.p3{--rot:135deg; background:linear-gradient(180deg,var(--peach),#fdeadb);}
+  .petal.p4{--rot:180deg; background:linear-gradient(180deg,var(--pink),#f9d7e5);}
+  .petal.p5{--rot:225deg; background:linear-gradient(180deg,var(--lavender),#e6d9f7);}
+  .petal.p6{--rot:270deg; background:linear-gradient(180deg,var(--mint),#d7f0e3);}
+  .petal.p7{--rot:315deg; background:linear-gradient(180deg,var(--peach),#fdeadb);}
+
+  .petal.open{
+    opacity:1; transform: rotate(var(--rot)) scale(1);
+  }
+
+  .glow{
+    position:absolute; left:50%; top:50%; width:280px; height:280px;
+    transform:translate(-50%,-50%) scale(.3); border-radius:50%;
+    background: radial-gradient(circle, rgba(255,235,200,.55), rgba(255,235,200,0) 70%);
+    opacity:0; pointer-events:none; transition: opacity 1s ease, transform 1.2s ease;
+    z-index:1;
+  }
+  .glow.on{ opacity:1; transform:translate(-50%,-50%) scale(1.15); }
+
+  .drops{
+    display:flex; justify-content:center; gap:6px; margin:8px 0 20px; flex-wrap:wrap;
+  }
+  .drop{
+    width:10px; height:10px; border-radius:50% 50% 50% 0; transform:rotate(45deg);
+    background:#e4d7ee; transition: background .4s ease, transform .4s ease;
+  }
+  .drop.filled{ background: linear-gradient(180deg, var(--lavender), var(--pink)); transform:rotate(45deg) scale(1.15); }
+
+  .btn{
+    appearance:none; border:none; cursor:pointer;
+    width:100%; max-width:280px; padding:18px 20px; border-radius:999px;
+    font-size:17px; font-weight:700; color:#6b4f63;
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    box-shadow: 0 10px 24px rgba(190,160,210,.4);
+    transition: transform .15s ease, box-shadow .15s ease, opacity .3s ease;
+  }
+  .btn:active{ transform: scale(.96); box-shadow: 0 6px 14px rgba(190,160,210,.35); }
+  .btn:disabled{ opacity:.5; box-shadow:none; }
+
+  .reset{
+    margin-top:14px; background:none; border:none; color:var(--ink);
+    opacity:.45; font-size:13px; text-decoration:underline; cursor:pointer;
+  }
+
+  .confetti{
+    position:fixed; top:-10px; width:8px; height:14px; border-radius:2px;
+    opacity:.9; pointer-events:none; z-index:20;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .petal, .glow, .drop{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">сегодня</div>
+  <div class="status" id="statusText">Выпито 0 из 8<small id="subText">Осталось 8 стаканов</small></div>
+
+  <div class="stage">
+    <div class="glow" id="glow"></div>
+    <div class="petal p0" id="p0"></div>
+    <div class="petal p1" id="p1"></div>
+    <div class="petal p2" id="p2"></div>
+    <div class="petal p3" id="p3"></div>
+    <div class="petal p4" id="p4"></div>
+    <div class="petal p5" id="p5"></div>
+    <div class="petal p6" id="p6"></div>
+    <div class="petal p7" id="p7"></div>
+    <div class="center"></div>
+  </div>
+
+  <div class="drops" id="drops"></div>
+
+  <button class="btn" id="addBtn">+1 стакан 💧</button>
+  <button class="reset" id="resetBtn">начать день заново</button>
+</div>
+
+<script>
+  const TOTAL = 8;
+  let count = 0;
+
+  const statusText = document.getElementById('statusText');
+  const subText = document.getElementById('subText');
+  const addBtn = document.getElementById('addBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const glow = document.getElementById('glow');
+  const dropsWrap = document.getElementById('drops');
+
+  for(let i=0;i<TOTAL;i++){
+    const d = document.createElement('div');
+    d.className = 'drop';
+    d.id = 'drop'+i;
+    dropsWrap.appendChild(d);
+  }
+
+  function loadFromStorage(){
+    const stored = localStorage.getItem('waterTrackerDate');
+    const today = new Date().toDateString();
+    
+    if(stored === today){
+      count = parseInt(localStorage.getItem('waterTrackerCount')) || 0;
+    } else {
+      count = 0;
+      localStorage.setItem('waterTrackerDate', today);
+      localStorage.setItem('waterTrackerCount', '0');
+    }
+  }
+
+  function saveToStorage(){
+    localStorage.setItem('waterTrackerCount', count.toString());
+  }
+
+  function render(){
+    statusText.childNodes[0].textContent = `Выпито ${count} из ${TOTAL} `;
+    subText.textContent = count >= TOTAL
+      ? 'Ты вся такая гидратированная сегодня ✨'
+      : `Осталось ${TOTAL - count} ${plural(TOTAL - count)}`;
+
+    for(let i=0;i<TOTAL;i++){
+      document.getElementById('p'+i).classList.toggle('open', i < count);
+      document.getElementById('drop'+i).classList.toggle('filled', i < count);
+    }
+
+    addBtn.disabled = count >= TOTAL;
+    addBtn.textContent = count >= TOTAL ? 'Цветок расцвёл 🌸' : '+1 стакан 💧';
+
+    if(count >= TOTAL){
+      glow.classList.add('on');
+      burstConfetti();
+    } else {
+      glow.classList.remove('on');
+    }
+  }
+
+  function plural(n){
+    const f = n % 10, s = n % 100;
+    if(f===1 && s!==11) return 'стакан';
+    if([2,3,4].includes(f) && ![12,13,14].includes(s)) return 'стакана';
+    return 'стаканов';
+  }
+
+  function burstConfetti(){
+    const colors = ['#f7c6d9','#d9c7f0','#c3e9d9','#fbe0c9'];
+    for(let i=0;i<24;i++){
+      setTimeout(()=>{
+        const c = document.createElement('div');
+        c.className='confetti';
+        c.style.left = (45 + Math.random()*10) + 'vw';
+        c.style.background = colors[Math.floor(Math.random()*colors.length)];
+        c.style.transform = `rotate(${Math.random()*360}deg)`;
+        document.body.appendChild(c);
+        const dur = 1600 + Math.random()*800;
+        const drift = (Math.random()-0.5)*160;
+        c.animate([
+          { transform:`translate(0,0) rotate(0deg)`, opacity:1 },
+          { transform:`translate(${drift}px, 90vh) rotate(${360+Math.random()*360}deg)`, opacity:0 }
+        ], { duration: dur, easing:'cubic-bezier(.25,.46,.45,.94)' });
+        setTimeout(()=>c.remove(), dur+50);
+      }, i*30);
+    }
+  }
+
+  addBtn.addEventListener('click', ()=>{
+    if(count < TOTAL){
+      count++;
+      saveToStorage();
+      render();
+      if(navigator.vibrate) navigator.vibrate(12);
+    }
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    count = 0;
+    saveToStorage();
+    glow.classList.remove('on');
+    render();
+  });
+
+  loadFromStorage();
+  render();
+</script>
+
+</body>
+</html>
