@@ -1,8 +1,11 @@
+import os
 import logging
+from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-BOT_TOKEN = "8875465912:AAFlkBVyqFUyM5sdZhenL6h3M20yCrh9G-I"
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = "@zaya_vaibkodim"
 
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +28,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await ask_to_subscribe(update)
 
 async def tracker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Команда /tracker - отправляет гайд по трекеру воды"""
     user_id = update.effective_user.id
     user_name = update.effective_user.first_name
 
@@ -51,9 +53,7 @@ async def tracker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 )
 
             except FileNotFoundError:
-                await update.message.reply_text(
-                    "Ошибка: файл гайда не найден."
-                )
+                await update.message.reply_text("Ошибка: файл гайда не найден.")
         else:
             await ask_to_subscribe(update)
 
@@ -62,7 +62,6 @@ async def tracker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await ask_to_subscribe(update)
 
 async def mycode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Команда /mycode - отправляет готовый код трекера воды"""
     user_id = update.effective_user.id
     user_name = update.effective_user.first_name
 
@@ -86,9 +85,7 @@ async def mycode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 await update.message.reply_text("Создавай и делись результатом! 💪")
 
             except FileNotFoundError:
-                await update.message.reply_text(
-                    "Ошибка: файл кода не найден."
-                )
+                await update.message.reply_text("Ошибка: файл кода не найден.")
         else:
             await ask_to_subscribe(update)
 
@@ -131,14 +128,16 @@ async def send_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, user_n
         )
 
     except FileNotFoundError:
-        await update.message.reply_text(
-            "Ошибка: файл промпта не найден в папке."
-        )
+        await update.message.reply_text("Ошибка: файл промпта не найден в папке.")
     except Exception as e:
         logger.error(f"Ошибка: {e}")
         await update.message.reply_text("Ошибка при отправке. Попробуй позже!")
 
 def main() -> None:
+    if not BOT_TOKEN:
+        print("❌ ОШИБКА: BOT_TOKEN не найден. Проверь файл .env")
+        return
+
     application = Application.builder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("tracker", tracker))
